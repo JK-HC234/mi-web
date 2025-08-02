@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>🤍 Amigo Anónimo Real</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+      color: white;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.2em;
+      margin-bottom: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      max-width: 700px;
+      height: 100px;
+      font-size: 16px;
+      padding: 15px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      resize: none;
+      display: block;
+      margin: 20px auto;
+    }
+
+    button {
+      display: block;
+      margin: 10px auto;
+      background: #00c9a7;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .stats {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px 15px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .message-box {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px auto;
+      max-width: 700px;
+    }
+
+    #ai-bubble {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #00c9a7;
+      color: #fff;
+      padding: 15px;
+      border-radius: 15px 15px 0 15px;
+      max-width: 300px;
+      box-shadow: 0 0 10px #00c9a7;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="stats" id="stats">
+    🧍‍♂️ Usuarios en línea: <span id="online">1</span><br>
+    📨 Mensajes enviados: <span id="sent">0</span>
+  </div>
+
+  <h1>🤍 Amigo Anónimo</h1>
+  <p style="text-align: center;">Escribe lo que sientes. Serás escuchado.</p>
+
+  <textarea id="userMessage" placeholder="Escribe aquí lo que quieras desahogar..."></textarea>
+  <button onclick="enviarMensaje()">Enviar</button>
+
+  <div class="message-box" id="iaResponse" style="display:none;">
+    <strong>💬 Consejo de tu IA amiga:</strong>
+    <p id="responseText"></p>
+  </div>
+
+  <div id="ai-bubble">¿Necesitas un consejo? Estoy aquí 💙</div>
+
+  <script>
+    const API_KEY = "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";
+
+    let mensajesEnviados = 0;
+    let usuariosOnline = Math.floor(Math.random() * 10) + 1;
+    document.getElementById('online').textContent = usuariosOnline;
+
+    async function enviarMensaje() {
+      const input = document.getElementById('userMessage');
+      const msg = input.value.trim();
+      if (msg === "") {
+        alert("Escribe algo primero.");
+        return;
+      }
+
+      mensajesEnviados++;
+      document.getElementById('sent').textContent = mensajesEnviados;
+
+      document.getElementById('responseText').textContent = "Pensando...";
+      document.getElementById('iaResponse').style.display = 'block';
+      document.getElementById('ai-bubble').style.display = 'none';
+
+      try {
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${API_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: "openai/gpt-3.5-turbo",
+            messages: [{ role: "user", content: msg }]
+          })
+        });
+
+        const data = await res.json();
+        const respuesta = data.choices?.[0]?.message?.content || "No pude responder ahora.";
+
+        document.getElementById('responseText').textContent = respuesta;
+      } catch (error) {
+        console.error(error);
+        document.getElementById('responseText').textContent = "Error al conectar con la IA.";
+      }
+
+      input.value = '';
+    }
+
+    // Mostrar el globito IA automáticamente
+    setTimeout(() => {
+      document.getElementById('ai-bubble').style.display = 'block';
+    }, 4000);
+
+    // Al hacer clic en el globito, preguntar algo
+    document.getElementById('ai-bubble').addEventListener('click', async () => {
+      const pregunta = prompt("¿En qué puedo ayudarte?");
+      if (!pregunta) return;
+
+      mensajesEnviados++;
+      document.getElementById('sent').textContent = mensajesEnviados;
+
+      document.getElementById('responseText').textContent = "Pensando...";
+      document.getElementById('iaResponse').style.display = 'block';
+
+      try {
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${API_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: "openai/gpt-3.5-turbo",
+            messages: [{ role: "user", content: pregunta }]
+          })
+        });
+
+        const data = await res.json();
+        const respuesta = data.choices?.[0]?.message?.content || "No pude responder ahora.";
+
+        document.getElementById('responseText').textContent = respuesta;
+      } catch (err) {
+        console.error(err);
+        document.getElementById('responseText').textContent = "Error al conectar con la IA.";
+      }
+    });
+  </script>
+</body>
+</html>
